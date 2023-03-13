@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+struct memory_block {
+    int size;
+    int is_free;
+    struct memory_block *next;
+};
+
+
+struct memory_block *head;
+
+void *allocate_memory(int size) {
+ 
+    struct memory_block *current_block = head;
+    struct memory_block *best_fit_block = NULL;
+    while (current_block != NULL) {
+        if (current_block->is_free && current_block->size >= size) {
+            if (best_fit_block == NULL || current_block->size < best_fit_block->size) {
+                best_fit_block = current_block;
+            }
+        }
+        current_block = current_block->next;
+    }
+
+    if (best_fit_block != NULL) {
+        best_fit_block->is_free = 0;
+        return (void *) (best_fit_block + 1);
+    }
+   
+    else {
+        return NULL;
+    }
+}
+
+
+void deallocate_memory(void *ptr) {
+
+    struct memory_block *current_block = head;
+    while (current_block != NULL && current_block + 1 != ptr) {
+        current_block = current_block->next;
+    }
+
+    if (current_block != NULL) {
+        current_block->is_free = 1;
+    }
+}
+
+int main() {
+
+    head = (struct memory_block *) malloc(sizeof(struct memory_block));
+    head->size = 1000;
+    head->is_free = 1;
+    head->next = NULL;
+
+
+    int *ptr1 = (int *) allocate_memory(100 * sizeof(int));
+    int *ptr2 = (int *) allocate_memory(200 * sizeof(int));
+    int *ptr3 = (int *) allocate_memory(50 * sizeof(int));
+
+
+    ptr1[0] = 1;
+    ptr2[0] = 2;
+    ptr3[0] = 3;
+
+
+    deallocate_memory(ptr1);
+    deallocate_memory(ptr2);
+    deallocate_memory(ptr3);
+
+
+    struct memory_block *current_block = head;
+    while (current_block != NULL) {
+        struct memory_block *next_block = current_block->next;
+        free(current_block);
+        current_block = next_block;
+    }
+
+    return 0;
+}
